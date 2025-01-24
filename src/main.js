@@ -1,32 +1,54 @@
 import "./reset.css"
 import "./style.css"
+import axios from "axios"
 import data from "./data.json"
 import Today from "./components/Today"
 import ForecastDay from "./components/ForecastDay"
 import ForecastHour from "./components/ForecastHour"
 
 const apiKey = import.meta.env.VITE_API_KEY
-const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const omwKey = import.meta.env.VITE_OWM_KEY
 
-const input = document.querySelector("#locationInput")
+const input = document.querySelector("#location-input")
 const location = document.querySelector("#location")
 const description = document.querySelector("#description")
-const currentTemp = document.querySelector("#currentTemp")
-const feelsLike = document.querySelector("#feelsLike")
-const humidity = document.querySelector("#humidity")
+const currentTemp = document.querySelector("#current-temp")
 const forecast = document.querySelector("#forecast")
 const forecastHour = document.querySelector("#forecast-hour")
+
+async function getCityName(geolocation) {
+  const url = `https://api.openweathermap.org/geo/1.0/reverse?lat=${geolocation.latitude}&lon=${geolocation.longitude}&limit=1&appid=${omwKey}`
+
+  try {
+    const data = await axios.get(url).then((res) => res.data)
+    const location = `${data[0].name}, ${data[0].state}`
+    return location
+  } catch (error) {
+    console.error(error.message)
+  }
+}
+
+async function getGeolocation() {
+  try {
+    const position = await getCurrentPosition()
+    const latitude = position.coords.latitude
+    const longitude = position.coords.longitude
+    return { latitude, longitude }
+  } catch (error) {
+    console.error("Error getting geolocation:", error)
+  }
+}
+
+function getCurrentPosition() {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject)
+  })
+}
 
 async function getWeather(location) {
   const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?key=${apiKey}`
   try {
-    // const response = await fetch(url)
-    // if (!response.ok) {
-    //   throw new Error(`Response status: ${response.status}`)
-    // }
-
-    // const weatherData = await response.json()
-    const weatherData = data
+    const weatherData = await axios.get(url).then((res) => res.data)
     return {
       current: parseCurrentWeather(weatherData),
       daily: parseDailyWeather(weatherData),
@@ -104,18 +126,18 @@ function updateUI({ current, daily, hourly }) {
   currentTemp.innerHTML = Today(current)
   forecast.innerHTML = daily.map((day) => ForecastDay(day)).join("")
   forecastHour.innerHTML = hourly.map((hour) => ForecastHour(hour)).join("")
-  // feelsLike.textContent = weatherData.currentConditions.feelslike
-  // humidity.textContent = weatherData.currentConditions.humidity
-  // forecast.textContent =
-  //   weatherData.days[0].tempmax + " " + weatherData.days[0].tempmin
 }
 
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     getWeather(input.value).then(updateUI)
-    // updateUI(data)
   }
 })
 
-// const date = new Date(1736402400 * 1000)
-// console.log(days[date.getUTCDay()])
+try {
+  const geolocation = await getGeolocation()
+  const city = await getCityName(geolocation)
+  getWeather(city).then(updateUI)
+} catch (error) {
+  console.log(error)
+}
