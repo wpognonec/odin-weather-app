@@ -2,7 +2,8 @@ import "./reset.css"
 import "./style.css"
 import data from "./data.json"
 import Today from "./components/Today"
-import ForecastDay from "./components/forecastDay"
+import ForecastDay from "./components/ForecastDay"
+import ForecastHour from "./components/ForecastHour"
 
 const apiKey = import.meta.env.VITE_API_KEY
 const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -14,6 +15,7 @@ const currentTemp = document.querySelector("#currentTemp")
 const feelsLike = document.querySelector("#feelsLike")
 const humidity = document.querySelector("#humidity")
 const forecast = document.querySelector("#forecast")
+const forecastHour = document.querySelector("#forecast-hour")
 
 async function getWeather(location) {
   const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?key=${apiKey}`
@@ -101,6 +103,7 @@ function updateUI({ current, daily, hourly }) {
   description.textContent = current.description
   currentTemp.innerHTML = Today(current)
   forecast.innerHTML = daily.map((day) => ForecastDay(day)).join("")
+  forecastHour.innerHTML = hourly.map((hour) => ForecastHour(hour)).join("")
   // feelsLike.textContent = weatherData.currentConditions.feelslike
   // humidity.textContent = weatherData.currentConditions.humidity
   // forecast.textContent =

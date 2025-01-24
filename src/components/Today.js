@@ -1,6 +1,6 @@
 export default function Today(data) {
   return `
-  <div class="today">
+  <div class="flex">
     <div class="temp">
       <img src="/icons_color/${data.icon}.svg"></img>
       <div>${data.temp}</div>
